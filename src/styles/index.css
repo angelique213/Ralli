@@ -138,3 +138,160 @@ h1 {
     font-size: 32px;
   }
 }
+
+/* A narrower column keeps the feed easy to read on desktop. */
+.feed {
+  max-width: 700px;
+}
+
+.feed-intro {
+  margin-bottom: 28px;
+}
+
+.create-post,
+.post-card {
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e4e5f5;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(65, 54, 180, 0.04);
+}
+
+.create-post {
+  border-top: 3px solid #ff5f72;
+}
+
+.feed h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+}
+
+.create-post label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.create-post textarea {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  border: 1px solid #cbcbe2;
+  border-radius: 10px;
+  background: #f7f8ff;
+  color: #24205f;
+  font: inherit;
+  resize: vertical;
+}
+
+.create-post textarea::placeholder {
+  color: #62627a;
+}
+
+.composer-footer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.composer-footer p {
+  flex: 1;
+  margin: 0;
+  color: #62627a;
+  font-size: 13px;
+}
+
+.post-list {
+  margin-top: 32px;
+}
+
+.post-card + .post-card {
+  margin-top: 16px;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.post-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: #4935e8;
+  background: #efedff;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.post-author {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.post-author h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.post-author p {
+  margin: 2px 0 0;
+  color: #62627a;
+  font-size: 13px;
+}
+
+.post-text {
+  margin: 20px 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.post-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e4e5f5;
+}
+
+.post-action {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid #e4e5f5;
+  border-radius: 8px;
+  color: #4935e8;
+  background: #ffffff;
+  font: inherit;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.post-action:hover {
+  background: #f0eeff;
+}
+
+/* Show keyboard users which control they have selected. */
+button:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #4935e8;
+  outline-offset: 3px;
+}
+
+/* Stack the composer controls on phones. */
+@media (max-width: 600px) {
+  .create-post,
+  .post-card {
+    padding: 20px;
+  }
+
+  .composer-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+}
