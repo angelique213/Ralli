@@ -1,5 +1,17 @@
+import { useState } from 'react'
+
 // Props let us reuse this card with different post details.
-function PostCard({ displayName, username, timestamp, text }) {
+function PostCard({ displayName, username, timestamp, text, initialLikes = 0 }) {
+  // Each card remembers whether this user has liked it.
+  const [isLiked, setIsLiked] = useState(false)
+  // Adds one to the starting count only when this post is liked.
+  const likeCount = initialLikes + (isLiked ? 1 : 0)
+
+  function handleLike() {
+    // Adds or removes this user's like.
+    setIsLiked((wasLiked) => !wasLiked)
+  }
+
   return (
     <article className="post-card" aria-label={`Post by ${displayName}`}>
       <header className="post-header">
@@ -10,9 +22,16 @@ function PostCard({ displayName, username, timestamp, text }) {
         </div>
       </header>
       <p className="post-text">{text}</p>
-      {/* These buttons are just part of the UI for now. */}
       <div className="post-actions">
-        <button type="button" className="post-action">Like</button>
+        <button
+          type="button"
+          className="post-action"
+          onClick={handleLike}
+          aria-pressed={isLiked}
+        >
+          {isLiked ? 'Liked' : 'Like'} · {likeCount}
+        </button>
+        {/* Comments are still a UI preview. */}
         <button type="button" className="post-action">Comment</button>
       </div>
     </article>

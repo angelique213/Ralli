@@ -295,3 +295,10 @@ textarea:focus-visible {
     gap: 12px;
   }
 }
+
+
+/* Makes it clear when there is no text to post. */
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
