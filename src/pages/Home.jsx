@@ -74,7 +74,7 @@ function Home() {
           onChange={(event) => setPostText(event.target.value)}
         />
         <div className="composer-footer">
-          <p>Posts and likes reset when you refresh. Comments are still a preview.</p>
+          <p>Posts, likes, and comments reset when you refresh.</p>
           <button
             type="button"
             className="primary-button"
