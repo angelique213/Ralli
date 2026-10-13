@@ -35,10 +35,15 @@ function PostCard({ displayName, username, timestamp, text, initialLikes = 0 }) 
     setIsLiked((wasLiked) => !wasLiked)
   }
 
+  // Makes initials and picks a consistent avatar color for each name.
+  const initials = displayName.split(' ').map((name) => name.charAt(0)).slice(0, 2).join('')
+  const avatarColors = ['avatar-blue', 'avatar-purple', 'avatar-coral']
+  const avatarColor = avatarColors[displayName.charCodeAt(0) % avatarColors.length]
+
   return (
     <article className="post-card" aria-label={`Post by ${displayName}`}>
       <header className="post-header">
-        <div className="post-avatar" aria-hidden="true">{displayName.charAt(0)}</div>
+        <div className={`post-avatar ${avatarColor}`} aria-hidden="true">{initials}</div>
         <div className="post-author">
           <h3>{displayName}</h3>
           <p>@{username} <span aria-hidden="true">·</span> {timestamp}</p>
@@ -52,6 +57,9 @@ function PostCard({ displayName, username, timestamp, text, initialLikes = 0 }) 
           onClick={handleLike}
           aria-pressed={isLiked}
         >
+          <svg className="action-icon" viewBox="0 0 24 24" aria-hidden="true" fill={isLiked ? 'currentColor' : 'none'}>
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+          </svg>
           {isLiked ? 'Liked' : 'Like'} · {likeCount}
         </button>
         <button
@@ -60,6 +68,9 @@ function PostCard({ displayName, username, timestamp, text, initialLikes = 0 }) 
           onClick={() => setShowComments((isOpen) => !isOpen)}
           aria-expanded={showComments}
         >
+          <svg className="action-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+            <path d="M21 11.5a9 9 0 0 1-9 9 10 10 0 0 1-4-.9L3 21l1.4-5a9 9 0 1 1 16.6-4.5Z" />
+          </svg>
           Comment · {comments.length}
         </button>
       </div>

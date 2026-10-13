@@ -56,50 +56,69 @@ function Home() {
   }
 
   return (
-    <main className="container home feed">
+    <main className="container home">
       <div className="feed-intro">
         <p className="eyebrow">A place to connect</p>
         <h1>Your Ralli feed</h1>
         <p className="welcome-text">Small moments. Shared progress. Find your people.</p>
       </div>
 
-      <section className="create-post" aria-labelledby="create-post-title">
-        <h2 id="create-post-title">Create Post</h2>
-        <label htmlFor="post-text">What would you like to share?</label>
-        <textarea
-          id="post-text"
-          rows={4}
-          placeholder="Share a moment, a small win, or a new idea…"
-          value={postText}
-          onChange={(event) => setPostText(event.target.value)}
-        />
-        <div className="composer-footer">
-          <p>Posts, likes, and comments reset when you refresh.</p>
-          <button
-            type="button"
-            className="primary-button"
-            onClick={handlePost}
-            disabled={!postText.trim()}
-          >
-            Post
-          </button>
-        </div>
-      </section>
+      <div className="home-layout">
+        <div className="feed">
+          <section className="create-post" aria-labelledby="create-post-title">
+            <h2 id="create-post-title">Create Post</h2>
+            {/* Puts a sample avatar beside the composer. */}
+            <div className="composer-body">
+              <div className="post-avatar avatar-purple" aria-hidden="true">RS</div>
+              <div className="composer-input">
+                <label htmlFor="post-text">What would you like to share?</label>
+                <textarea
+                  id="post-text"
+                  rows={4}
+                  placeholder="Share a moment, a small win, or a new idea…"
+                  value={postText}
+                  onChange={(event) => setPostText(event.target.value)}
+                />
+              </div>
+            </div>
+            <div className="composer-footer">
+              <p>Posts, likes, and comments reset when you refresh.</p>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={handlePost}
+                disabled={!postText.trim()}
+              >
+                Post
+              </button>
+            </div>
+          </section>
 
-      <section className="post-list" aria-labelledby="feed-title">
-        <h2 id="feed-title">Around the community</h2>
-        {/* Displays each post using the same reusable card. */}
-        {posts.map((post) => (
-          <PostCard
-            key={post.id}
-            displayName={post.displayName}
-            username={post.username}
-            timestamp={post.timestamp}
-            text={post.text}
-            initialLikes={post.initialLikes}
-          />
-        ))}
-      </section>
+          <section className="post-list" aria-labelledby="feed-title">
+            <h2 id="feed-title">Around the community</h2>
+            {/* Displays each post using the same reusable card. */}
+            {posts.map((post) => (
+              <PostCard
+                key={post.id}
+                displayName={post.displayName}
+                username={post.username}
+                timestamp={post.timestamp}
+                text={post.text}
+                initialLikes={post.initialLikes}
+              />
+            ))}
+          </section>
+        </div>
+        {/* Shows a preview of future challenges. */}
+        <aside className="challenge-preview" aria-labelledby="challenge-title">
+          <span className="coming-soon-badge">Coming soon</span>
+          <div className="challenge-symbol" aria-hidden="true">✦</div>
+          <p className="eyebrow">Better together</p>
+          <h2 id="challenge-title">Challenge yourself.<br />Connect with others.</h2>
+          <p>Small steps can spark great connections. Shared challenges are on their way to Ralli.</p>
+          <div className="challenge-hint">A little courage. A little community.</div>
+        </aside>
+      </div>
     </main>
   )
 }
