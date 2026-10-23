@@ -1,38 +1,76 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getActivity, getComments, createComment, saveLike, feedError } from '../services/feed.js'
 
-// Props let us reuse this card with different post details.
-function PostCard({ displayName, username, timestamp, text, initialLikes = 0 }) {
-  // Each card remembers whether this user has liked it.
-  const [isLiked, setIsLiked] = useState(false)
-  // Adds one to the starting count only when this post is liked.
-  const likeCount = initialLikes + (isLiked ? 1 : 0)
-
-  // Stores the comments and the text being typed for this post.
+function PostCard({ post, user }) {
+  const displayName = post.profiles?.display_name || 'Ralli Member'
+  const timestamp = new Date(post.created_at).toLocaleString()
+  const [activity, setActivity] = useState(null)
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
-  // Shows or hides the comment section.
   const [showComments, setShowComments] = useState(false)
+  const [loadingComments, setLoadingComments] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [commentError, setCommentError] = useState('')
+  const [retry, setRetry] = useState(0)
+  const isLiked = activity?.isLiked || false
 
-  function handleComment(event) {
-    // Keeps the form from refreshing the page.
-    event.preventDefault()
-    const trimmedText = commentText.trim()
-    if (!trimmedText) return
+  // Gets saved counts and this account's like from the database.
+  useEffect(() => {
+    let active = true
+    getActivity(post.id, user?.id).then((data) => { if (active) setActivity(data) })
+      .catch((problem) => { if (active) setError(feedError(problem)) })
+    return () => { active = false }
+  }, [post.id, user?.id, retry])
 
-    const newComment = {
-      id: crypto.randomUUID(),
-      author: 'Ralli Student',
-      text: trimmedText,
+  async function loadComments() {
+    setLoadingComments(true)
+    setCommentError('')
+    try {
+      setComments(await getComments(post.id))
+    } catch (problem) {
+      setCommentError(feedError(problem))
+    } finally {
+      setLoadingComments(false)
     }
-    // Adds a new comment to this post only.
-    setComments((currentComments) => [...currentComments, newComment])
-    // Clears the comment box after submitting.
-    setCommentText('')
   }
 
-  function handleLike() {
-    // Adds or removes this user's like.
-    setIsLiked((wasLiked) => !wasLiked)
+  function toggleComments() {
+    setShowComments(!showComments)
+    if (!showComments) loadComments()
+  }
+
+  async function handleComment(event) {
+    event.preventDefault()
+    if (!user || busy || !commentText.trim()) return
+    setBusy(true)
+    setError('')
+    try {
+      // Adds the saved row, then clears the input.
+      const saved = await createComment(post.id, commentText.trim(), user.id)
+      setComments((current) => [...current, saved])
+      setCommentText('')
+      setActivity(await getActivity(post.id, user.id))
+    } catch (problem) {
+      setError(feedError(problem))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleLike() {
+    if (!user || busy || !activity) return
+    setBusy(true)
+    setError('')
+    try {
+      await saveLike(post.id, user.id, isLiked)
+      setActivity(await getActivity(post.id, user.id))
+    } catch (problem) {
+      setActivity(null)
+      setError(feedError(problem))
+    } finally {
+      setBusy(false)
+    }
   }
 
   // Makes initials and picks a consistent avatar color for each name.
@@ -46,59 +84,85 @@ function PostCard({ displayName, username, timestamp, text, initialLikes = 0 }) 
         <div className={`post-avatar ${avatarColor}`} aria-hidden="true">{initials}</div>
         <div className="post-author">
           <h3>{displayName}</h3>
-          <p>@{username} <span aria-hidden="true">·</span> {timestamp}</p>
+          <p><time dateTime={post.created_at}>{timestamp}</time></p>
         </div>
       </header>
-      <p className="post-text">{text}</p>
+      <p className="post-text">{post.body}</p>
+      {/* Keeps the saved counts separate from the action buttons. */}
+      <div className="post-counts" aria-live="polite">
+        <span>{activity ? `${activity.likeCount} ${activity.likeCount === 1 ? 'like' : 'likes'}` : 'Loading likes…'}</span>
+        <span>{activity ? `${activity.commentCount} ${activity.commentCount === 1 ? 'comment' : 'comments'}` : 'Loading comments…'}</span>
+      </div>
       <div className="post-actions">
         <button
           type="button"
           className="post-action"
+          disabled={!user || busy || !activity}
           onClick={handleLike}
           aria-pressed={isLiked}
         >
           <svg className="action-icon" viewBox="0 0 24 24" aria-hidden="true" fill={isLiked ? 'currentColor' : 'none'}>
             <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
           </svg>
-          {isLiked ? 'Liked' : 'Like'} · {likeCount}
+          {isLiked ? 'Liked' : 'Like'}
         </button>
         <button
           type="button"
           className="post-action"
-          onClick={() => setShowComments((isOpen) => !isOpen)}
+          disabled={loadingComments || busy}
+          onClick={toggleComments}
           aria-expanded={showComments}
         >
           <svg className="action-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none">
             <path d="M21 11.5a9 9 0 0 1-9 9 10 10 0 0 1-4-.9L3 21l1.4-5a9 9 0 1 1 16.6-4.5Z" />
           </svg>
-          Comment · {comments.length}
+          Comment
         </button>
       </div>
+      {error && <div role="alert"><p className="field-error">{error}</p><button type="button" className="text-button" onClick={() => { setError(''); setRetry((value) => value + 1) }}>Reload counts</button></div>}
       {showComments && (
         <section className="comment-section" aria-label="Comments">
+          {loadingComments && <p role="status">Loading comments…</p>}
+          {commentError && <div role="alert"><p className="field-error">{commentError}</p><button type="button" className="text-button" onClick={loadComments}>Retry comments</button></div>}
+          {/* Displays the comments saved for this post. */}
+          <ul className="comment-list" aria-live="polite">
+            {comments.map((comment) => {
+              const author = comment.profiles?.display_name || 'Ralli Member'
+              const commentInitials = author.trim().split(/\s+/).map((name) => name.charAt(0)).slice(0, 2).join('')
+              return (
+                <li key={comment.id} className="comment-item">
+                  <div className="post-avatar avatar-purple comment-avatar" aria-hidden="true">{commentInitials}</div>
+                  <div className="comment-content">
+                    <div className="comment-bubble">
+                      <strong>{author}</strong>
+                      <p>{comment.body}</p>
+                    </div>
+                    <time className="comment-time" dateTime={comment.created_at}>
+                      {new Date(comment.created_at).toLocaleString()}
+                    </time>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+          {/* Keeps the input below all saved comments. */}
+          {!user && <p>Log in to add a comment.</p>}
           <form className="comment-form" onSubmit={handleComment}>
             <label>
-              Write a comment
-              <textarea
-                rows={2}
+              <span className="visually-hidden">Write a comment</span>
+              <input
+                type="text"
+                maxLength={2000}
+                disabled={!user || busy || loadingComments}
                 value={commentText}
                 onChange={(event) => setCommentText(event.target.value)}
                 placeholder="Add to the conversation…"
               />
             </label>
-            <button type="submit" className="primary-button" disabled={!commentText.trim()}>
-              Add comment
+            <button type="submit" className="primary-button" disabled={!user || busy || loadingComments || Boolean(commentError) || !commentText.trim()}>
+              {busy ? 'Saving…' : 'Send'}
             </button>
           </form>
-          {/* Displays the comments saved for this post. */}
-          <ul className="comment-list" aria-live="polite">
-            {comments.map((comment) => (
-              <li key={comment.id} className="comment-item">
-                <strong>{comment.author}</strong>
-                <p>{comment.text}</p>
-              </li>
-            ))}
-          </ul>
         </section>
       )}
     </article>

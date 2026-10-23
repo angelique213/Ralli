@@ -26,3 +26,6 @@ dist-ssr
 # Local environment files
 .env
 .env.*
+
+# Share placeholders, never local credentials.
+!.env.example

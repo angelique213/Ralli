@@ -1,58 +1,42 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PostCard from '../components/PostCard.jsx'
+import { getPosts, createPost, feedError } from '../services/feed.js'
 
-// Sample posts stay in this file until we add real data later.
-const samplePosts = [
-  {
-    id: 1,
-    initialLikes: 4,
-    displayName: 'Maya Chen',
-    username: 'mayamakes',
-    timestamp: '10 min ago',
-    text: 'Small win today: finished my first 5K! Taking it one step at a time really does add up. What is one thing you are proud of this week?',
-  },
-  {
-    id: 2,
-    initialLikes: 2,
-    displayName: 'Jordan Ellis',
-    username: 'jordanexplores',
-    timestamp: '35 min ago',
-    text: 'Trying a little challenge: spend 20 minutes outside every day this week. Today was a walk around campus with a friend. A pretty good place to start.',
-  },
-  {
-    id: 3,
-    initialLikes: 7,
-    displayName: 'Alex Rivera',
-    username: 'alexcreates',
-    timestamp: '1 hour ago',
-    text: 'Made time to sketch between classes today. It is nice to create something just for fun. Here is your reminder to make a little room for what you enjoy.',
-  },
-]
-
-function Home() {
+function Home({ user, onNavigate }) {
   // Stores the text the user is typing.
   const [postText, setPostText] = useState('')
-  // Starts the feed with our sample posts.
-  const [posts, setPosts] = useState(samplePosts)
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [saveError, setSaveError] = useState('')
+  const [reload, setReload] = useState(0)
 
-  function handlePost() {
+  // Loads real posts when this feed opens or the user retries.
+  useEffect(() => {
+    let active = true
+    getPosts().then((data) => { if (active) setPosts(data) })
+      .catch((problem) => { if (active) setError(feedError(problem)) })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [reload])
+
+  async function handlePost() {
+    if (!user || saving || loading) return
     const trimmedText = postText.trim()
-    // Stops empty posts, including text that is only spaces.
     if (!trimmedText) return
-
-    const newPost = {
-      id: crypto.randomUUID(),
-      displayName: 'Ralli Student',
-      username: 'rallistudent',
-      timestamp: 'Just now',
-      text: trimmedText,
-      initialLikes: 0,
+    setSaving(true)
+    setSaveError('')
+    try {
+      // Shows the post only after the database confirms it was saved.
+      const newPost = await createPost(trimmedText, user.id)
+      setPosts((currentPosts) => [newPost, ...currentPosts])
+      setPostText('')
+    } catch (problem) {
+      setSaveError(feedError(problem))
+    } finally {
+      setSaving(false)
     }
-
-    // Adds the new post above the existing posts.
-    setPosts((currentPosts) => [newPost, ...currentPosts])
-    // Clears the text box after posting.
-    setPostText('')
   }
 
   return (
@@ -67,14 +51,17 @@ function Home() {
         <div className="feed">
           <section className="create-post" aria-labelledby="create-post-title">
             <h2 id="create-post-title">Create Post</h2>
+            {!user && <p>Log in to post, like, and comment. <button type="button" className="text-button" onClick={() => onNavigate('login')}>Login</button></p>}
             {/* Puts a sample avatar beside the composer. */}
             <div className="composer-body">
               <div className="post-avatar avatar-purple" aria-hidden="true">RS</div>
               <div className="composer-input">
                 <label htmlFor="post-text">What would you like to share?</label>
                 <textarea
+                  disabled={!user || saving}
                   id="post-text"
                   rows={4}
+                  maxLength={5000}
                   placeholder="Share a moment, a small win, or a new idea…"
                   value={postText}
                   onChange={(event) => setPostText(event.target.value)}
@@ -82,29 +69,30 @@ function Home() {
               </div>
             </div>
             <div className="composer-footer">
-              <p>Posts, likes, and comments reset when you refresh.</p>
+              <p>Share a moment with the Ralli community.</p>
               <button
                 type="button"
                 className="primary-button"
                 onClick={handlePost}
-                disabled={!postText.trim()}
+                disabled={!user || saving || loading || Boolean(error) || !postText.trim()}
               >
-                Post
+                {saving ? 'Posting…' : 'Post'}
               </button>
             </div>
+            {saveError && <p role="alert" className="field-error">{saveError}</p>}
           </section>
 
           <section className="post-list" aria-labelledby="feed-title">
             <h2 id="feed-title">Around the community</h2>
+            {loading && <p role="status">Loading posts…</p>}
+            {error && <div role="alert"><p className="field-error">{error}</p><button type="button" className="post-action" onClick={() => { setError(''); setLoading(true); setReload((value) => value + 1) }}>Retry feed</button></div>}
+            {!loading && !error && posts.length === 0 && <p>No posts yet. Be the first to share a moment.</p>}
             {/* Displays each post using the same reusable card. */}
             {posts.map((post) => (
               <PostCard
+                user={user}
                 key={post.id}
-                displayName={post.displayName}
-                username={post.username}
-                timestamp={post.timestamp}
-                text={post.text}
-                initialLikes={post.initialLikes}
+                post={post}
               />
             ))}
           </section>
