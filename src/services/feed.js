@@ -24,8 +24,8 @@ async function readAll(makeQuery) {
 }
 
 // Uses the author's foreign key, not the relationship through likes.
-const postFields = 'id, user_id, body, created_at, profiles!posts_user_id_fkey(display_name)'
-const commentFields = 'id, user_id, body, created_at, profiles!comments_user_id_fkey(display_name)'
+const postFields = 'id, user_id, body, created_at, profiles!posts_user_id_fkey(display_name, avatar_path)'
+const commentFields = 'id, user_id, body, created_at, profiles!comments_user_id_fkey(display_name, avatar_path)'
 
 export function getPosts() {
   return readAll(() => database().from('posts').select(postFields).order('created_at', { ascending: false }).order('id', { ascending: false }))
@@ -66,4 +66,17 @@ export async function saveLike(postId, userId, isLiked) {
   const { error } = await query
   // Another tab may already have added this user's like.
   if (error && error.code !== '23505') throw error
+}
+
+// Loads only the signed-in user's posts, newest first.
+export function getUserPosts(userId) {
+  if (!userId) throw new Error('Please log in to view your posts.')
+  return readAll(() => database().from('posts').select(postFields).eq('user_id', userId).order('created_at', { ascending: false }).order('id', { ascending: false }))
+}
+
+export async function getProfile(userId) {
+  if (!userId) throw new Error('Please log in to view your profile.')
+  const { data, error } = await database().from('profiles').select('id, display_name, bio, avatar_path, cover_path, created_at').eq('id', userId).maybeSingle()
+  if (error) throw error
+  return data
 }

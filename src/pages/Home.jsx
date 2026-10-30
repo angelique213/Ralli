@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import PostCard from '../components/PostCard.jsx'
-import { getPosts, createPost, feedError } from '../services/feed.js'
+import Avatar from '../components/Avatar.jsx'
+import { getPosts, getProfile, createPost, feedError } from '../services/feed.js'
 
 function Home({ user, onNavigate }) {
   // Stores the text the user is typing.
@@ -11,6 +12,17 @@ function Home({ user, onNavigate }) {
   const [error, setError] = useState('')
   const [saveError, setSaveError] = useState('')
   const [reload, setReload] = useState(0)
+  const [ownProfile, setOwnProfile] = useState(null)
+  const [profileError, setProfileError] = useState('')
+  const [profileRetry, setProfileRetry] = useState(0)
+
+  // Returning from Profile reads the latest saved composer photo.
+  useEffect(() => {
+    let active = true
+    getProfile(user.id).then((saved) => { if (active) setOwnProfile(saved) })
+      .catch((problem) => { if (active) setProfileError(feedError(problem)) })
+    return () => { active = false }
+  }, [user.id, profileRetry])
 
   // Loads real posts when this feed opens or the user retries.
   useEffect(() => {
@@ -52,9 +64,9 @@ function Home({ user, onNavigate }) {
           <section className="create-post" aria-labelledby="create-post-title">
             <h2 id="create-post-title">Create Post</h2>
             {!user && <p>Log in to post, like, and comment. <button type="button" className="text-button" onClick={() => onNavigate('login')}>Login</button></p>}
-            {/* Puts a sample avatar beside the composer. */}
+            {/* Uses this account’s saved profile beside the composer. */}
             <div className="composer-body">
-              <div className="post-avatar avatar-purple" aria-hidden="true">RS</div>
+              <Avatar profile={ownProfile} />
               <div className="composer-input">
                 <label htmlFor="post-text">What would you like to share?</label>
                 <textarea
@@ -79,6 +91,7 @@ function Home({ user, onNavigate }) {
                 {saving ? 'Posting…' : 'Post'}
               </button>
             </div>
+            {profileError && <p className="field-error" role="alert">Could not load your composer photo. {profileError} <button type="button" className="text-button" onClick={() => { setProfileError(''); setProfileRetry((value) => value + 1) }}>Retry photo</button></p>}
             {saveError && <p role="alert" className="field-error">{saveError}</p>}
           </section>
 

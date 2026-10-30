@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router'
 import Header from './components/Header.jsx'
 import Home from './pages/Home.jsx'
+import Profile from './pages/Profile.jsx'
+import Explore from './pages/Explore.jsx'
+import PublicProfile from './pages/PublicProfile.jsx'
+import { ConnectionsProvider } from './components/ConnectionsProvider.jsx'
 import Login from './pages/Login.jsx'
 import SignUp from './pages/SignUp.jsx'
 import { supabase, authConfigured } from './services/supabase.js'
@@ -11,8 +15,8 @@ function App() {
 
   // Existing buttons now change the URL instead of temporary page state.
   function navigateToPage(page) {
-    const paths = { home: '/', login: '/login', signup: '/signup' }
-    navigate(paths[page], { replace: page === 'home' })
+    const paths = { home: '/', login: '/login', signup: '/signup', profile: '/profile', explore: '/explore' }
+    navigate(paths[page])
   }
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(authConfigured)
@@ -81,6 +85,7 @@ function App() {
     <>
       {!authConfigured && <p className="container field-error" role="alert">Add your Supabase URL and publishable key to .env, then restart Vite.</p>}
       {authError && <p className="container field-error" role="alert">{authError}</p>}
+      <ConnectionsProvider key={user?.id || 'guest'}>
       <Routes>
         {/* Never mount the private feed without a Supabase session. */}
         <Route path="/" element={user ? (
@@ -89,11 +94,26 @@ function App() {
             <Home key={user.id} user={user} onNavigate={navigateToPage} />
           </>
         ) : <Navigate to="/login" replace />} />
+        <Route path="/profile" element={user ? (
+          <>
+            <Header page="profile" onNavigate={navigateToPage} user={user} onLogout={handleLogout} loggingOut={loggingOut} />
+            <Profile key={user.id} user={user} onNavigate={navigateToPage} />
+          </>
+        ) : <Navigate to="/login" replace />} />
+        <Route path="/explore" element={user ? <>
+          <Header page="explore" onNavigate={navigateToPage} user={user} onLogout={handleLogout} loggingOut={loggingOut} />
+          <Explore user={user} />
+        </> : <Navigate to="/login" replace />} />
+        <Route path="/profile/:userId" element={user ? <>
+          <Header page="profile" onNavigate={navigateToPage} user={user} onLogout={handleLogout} loggingOut={loggingOut} />
+          <PublicProfile user={user} onNavigate={navigateToPage} />
+        </> : <Navigate to="/login" replace />} />
         {/* Signed-in users go Home instead of seeing another login form. */}
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onNavigate={navigateToPage} />} />
         <Route path="/signup" element={user ? <Navigate to="/" replace /> : <SignUp onNavigate={navigateToPage} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </ConnectionsProvider>
     </>
   )
 }

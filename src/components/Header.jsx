@@ -13,11 +13,18 @@ function Header({ page, onNavigate, user, onLogout, loggingOut }) {
             aria-current={page === 'home' ? 'page' : undefined}
             onClick={() => onNavigate('home')}
           >Home</button>
-          {['Explore', 'Challenges', 'Profile'].map((name) => (
+          <button type="button" className={`nav-item ${page === 'explore' ? 'nav-active' : ''}`} aria-current={page === 'explore' ? 'page' : undefined} onClick={() => onNavigate('explore')}>Explore</button>
+          {['Challenges'].map((name) => (
             <button key={name} type="button" className="nav-item" disabled>
               {name}<span className="nav-note">Coming soon</span>
             </button>
           ))}
+          <button
+            type="button"
+            className={`nav-item ${page === 'profile' ? 'nav-active' : ''}`}
+            aria-current={page === 'profile' ? 'page' : undefined}
+            onClick={() => onNavigate('profile')}
+          >Profile</button>
         </nav>
         <div className="auth-navigation" aria-label="Account pages">
           {user ? <button type="button" className="post-action" onClick={onLogout} disabled={loggingOut}>{loggingOut ? 'Logging out…' : 'Logout'}</button> : <>

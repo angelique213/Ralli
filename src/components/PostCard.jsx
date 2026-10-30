@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react'
+import Avatar from './Avatar.jsx'
+import { Link } from 'react-router'
+import { profilePath } from '../services/connections.js'
 import { getActivity, getComments, createComment, saveLike, feedError } from '../services/feed.js'
 
-function PostCard({ post, user }) {
-  const displayName = post.profiles?.display_name || 'Ralli Member'
+function PostCard({ post, user, currentProfile }) {
+  // Profile edits immediately update this account's visible author details.
+  const authorProfile = currentProfile?.id === post.user_id ? currentProfile : post.profiles
+  const displayName = authorProfile?.display_name || 'Ralli Member'
   const timestamp = new Date(post.created_at).toLocaleString()
   const [activity, setActivity] = useState(null)
   const [comments, setComments] = useState([])
@@ -73,17 +78,12 @@ function PostCard({ post, user }) {
     }
   }
 
-  // Makes initials and picks a consistent avatar color for each name.
-  const initials = displayName.split(' ').map((name) => name.charAt(0)).slice(0, 2).join('')
-  const avatarColors = ['avatar-blue', 'avatar-purple', 'avatar-coral']
-  const avatarColor = avatarColors[displayName.charCodeAt(0) % avatarColors.length]
-
   return (
     <article className="post-card" aria-label={`Post by ${displayName}`}>
       <header className="post-header">
-        <div className={`post-avatar ${avatarColor}`} aria-hidden="true">{initials}</div>
+        <Link className="author-link" to={profilePath(post.user_id, user?.id)} aria-label={`View ${displayName}’s profile`}><Avatar profile={authorProfile} /></Link>
         <div className="post-author">
-          <h3>{displayName}</h3>
+          <h3><Link className="author-link" to={profilePath(post.user_id, user?.id)}>{displayName}</Link></h3>
           <p><time dateTime={post.created_at}>{timestamp}</time></p>
         </div>
       </header>
@@ -127,14 +127,14 @@ function PostCard({ post, user }) {
           {/* Displays the comments saved for this post. */}
           <ul className="comment-list" aria-live="polite">
             {comments.map((comment) => {
-              const author = comment.profiles?.display_name || 'Ralli Member'
-              const commentInitials = author.trim().split(/\s+/).map((name) => name.charAt(0)).slice(0, 2).join('')
+              const commenter = currentProfile?.id === comment.user_id ? currentProfile : comment.profiles
+              const author = commenter?.display_name || 'Ralli Member'
               return (
                 <li key={comment.id} className="comment-item">
-                  <div className="post-avatar avatar-purple comment-avatar" aria-hidden="true">{commentInitials}</div>
+                  <Link className="author-link" to={profilePath(comment.user_id, user?.id)} aria-label={`View ${author}’s profile`}><Avatar profile={commenter} small /></Link>
                   <div className="comment-content">
                     <div className="comment-bubble">
-                      <strong>{author}</strong>
+                      <strong><Link className="author-link" to={profilePath(comment.user_id, user?.id)}>{author}</Link></strong>
                       <p>{comment.body}</p>
                     </div>
                     <time className="comment-time" dateTime={comment.created_at}>
