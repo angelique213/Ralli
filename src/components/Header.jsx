@@ -5,7 +5,7 @@ function Header({ page, onNavigate, user, onLogout, loggingOut }) {
     <header className="site-header">
       <div className="container header-brand">
         <img className="header-logo" src={ralliLogo} alt="Ralli" width={108} height={108} />
-        {/* Shows the main navigation. Future pages stay disabled. */}
+        {/* Shows the main navigation. */}
         <nav className="main-nav" aria-label="Main navigation">
           <button
             type="button"
@@ -14,11 +14,7 @@ function Header({ page, onNavigate, user, onLogout, loggingOut }) {
             onClick={() => onNavigate('home')}
           >Home</button>
           <button type="button" className={`nav-item ${page === 'explore' ? 'nav-active' : ''}`} aria-current={page === 'explore' ? 'page' : undefined} onClick={() => onNavigate('explore')}>Explore</button>
-          {['Challenges'].map((name) => (
-            <button key={name} type="button" className="nav-item" disabled>
-              {name}<span className="nav-note">Coming soon</span>
-            </button>
-          ))}
+          <button type="button" className={`nav-item ${page === 'challenges' ? 'nav-active' : ''}`} aria-current={page === 'challenges' ? 'page' : undefined} onClick={() => onNavigate('challenges')}>Challenges</button>
           <button
             type="button"
             className={`nav-item ${page === 'profile' ? 'nav-active' : ''}`}

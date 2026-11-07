@@ -110,14 +110,14 @@ function Home({ user, onNavigate }) {
             ))}
           </section>
         </div>
-        {/* Shows a preview of future challenges. */}
+        {/* Opens the community challenges. */}
         <aside className="challenge-preview" aria-labelledby="challenge-title">
-          <span className="coming-soon-badge">Coming soon</span>
+          <span className="coming-soon-badge">Grow together</span>
           <div className="challenge-symbol" aria-hidden="true">✦</div>
           <p className="eyebrow">Better together</p>
           <h2 id="challenge-title">Challenge yourself.<br />Connect with others.</h2>
-          <p>Small steps can spark great connections. Shared challenges are on their way to Ralli.</p>
-          <div className="challenge-hint">A little courage. A little community.</div>
+          <p>Small steps can spark great connections. Find a goal and grow with the Ralli community.</p>
+          <button className="primary-button" onClick={() => onNavigate('challenges')}>Discover Challenges</button>
         </aside>
       </div>
     </main>

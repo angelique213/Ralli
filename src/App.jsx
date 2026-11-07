@@ -4,6 +4,9 @@ import Header from './components/Header.jsx'
 import Home from './pages/Home.jsx'
 import Profile from './pages/Profile.jsx'
 import Explore from './pages/Explore.jsx'
+import Challenges from './pages/Challenges.jsx'
+import ChallengeDetails from './pages/ChallengeDetails.jsx'
+import CreateChallenge from './pages/CreateChallenge.jsx'
 import PublicProfile from './pages/PublicProfile.jsx'
 import { ConnectionsProvider } from './components/ConnectionsProvider.jsx'
 import Login from './pages/Login.jsx'
@@ -15,7 +18,7 @@ function App() {
 
   // Existing buttons now change the URL instead of temporary page state.
   function navigateToPage(page) {
-    const paths = { home: '/', login: '/login', signup: '/signup', profile: '/profile', explore: '/explore' }
+    const paths = { home: '/', login: '/login', signup: '/signup', profile: '/profile', explore: '/explore', challenges: '/challenges' }
     navigate(paths[page])
   }
   const [session, setSession] = useState(null)
@@ -107,6 +110,18 @@ function App() {
         <Route path="/profile/:userId" element={user ? <>
           <Header page="profile" onNavigate={navigateToPage} user={user} onLogout={handleLogout} loggingOut={loggingOut} />
           <PublicProfile user={user} onNavigate={navigateToPage} />
+        </> : <Navigate to="/login" replace />} />
+        <Route path="/challenges" element={user ? <>
+          <Header page="challenges" onNavigate={navigateToPage} user={user} onLogout={handleLogout} loggingOut={loggingOut} />
+          <Challenges key={user.id} user={user} />
+        </> : <Navigate to="/login" replace />} />
+        <Route path="/challenges/new" element={user ? <>
+          <Header page="challenges" onNavigate={navigateToPage} user={user} onLogout={handleLogout} loggingOut={loggingOut} />
+          <CreateChallenge key={user.id} user={user} />
+        </> : <Navigate to="/login" replace />} />
+        <Route path="/challenges/:challengeId" element={user ? <>
+          <Header page="challenges" onNavigate={navigateToPage} user={user} onLogout={handleLogout} loggingOut={loggingOut} />
+          <ChallengeDetails key={user.id} user={user} />
         </> : <Navigate to="/login" replace />} />
         {/* Signed-in users go Home instead of seeing another login form. */}
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onNavigate={navigateToPage} />} />
