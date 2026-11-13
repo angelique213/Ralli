@@ -86,7 +86,7 @@ function App() {
 
   return (
     <>
-      {!authConfigured && <p className="container field-error" role="alert">Add your Supabase URL and publishable key to .env, then restart Vite.</p>}
+      {!authConfigured && <p className="container field-error" role="alert">Supabase configuration is missing or invalid. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY) in your deployment settings or local .env, then rebuild/redeploy or restart Vite.</p>}
       {authError && <p className="container field-error" role="alert">{authError}</p>}
       <ConnectionsProvider key={user?.id || 'guest'}>
       <Routes>
