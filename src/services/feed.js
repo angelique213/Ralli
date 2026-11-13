@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js'
+import { newPostImagePath, postImageBucket, removeUnusedPostImage, validatePostImage } from './postImages.js'
 
 function database() {
   if (!supabase) throw new Error('Supabase is not configured. Check your local .env file.')
@@ -6,6 +7,7 @@ function database() {
 }
 
 export function feedError(error) {
+  if (['42703', 'PGRST204'].includes(error.code)) return 'Post images need database setup. Apply 20261113_post_images.sql in Supabase SQL Editor, then refresh.'
   if (['42P01', 'PGRST200', 'PGRST205'].includes(error.code)) {
     return 'The feed tables are not ready. Apply the Ralli SQL migration in Supabase SQL Editor, then retry.'
   }
@@ -24,17 +26,60 @@ async function readAll(makeQuery) {
 }
 
 // Uses the author's foreign key, not the relationship through likes.
-const postFields = 'id, user_id, body, created_at, profiles!posts_user_id_fkey(display_name, avatar_path)'
+const postFields = 'id, user_id, body, image_path, created_at, profiles!posts_user_id_fkey(display_name, avatar_path)'
 const commentFields = 'id, user_id, body, created_at, profiles!comments_user_id_fkey(display_name, avatar_path)'
 
 export function getPosts() {
   return readAll(() => database().from('posts').select(postFields).order('created_at', { ascending: false }).order('id', { ascending: false }))
 }
 
-export async function createPost(body, userId) {
-  const { data, error } = await database().from('posts').insert({ body, user_id: userId }).select(postFields).single()
-  if (error) throw error
-  return data
+// Only explicit database rejections are safe to clean up automatically.
+function definitelyRejected(error) {
+  return /^(22|23)/.test(error.code || '') || ['42501', '42703', 'PGRST204'].includes(error.code)
+}
+
+export async function createPost(body, userId, image = null, onStatus = () => {}) {
+  body = body.trim()
+  if (!userId) throw new Error('Please log in before posting.')
+  if ((!body && !image) || body.length > 5000) throw new Error('Add text or a photo, and keep text to 5000 characters or fewer.')
+  let imagePath = null
+  if (image) {
+    await validatePostImage(image)
+    imagePath = newPostImagePath(userId, image)
+    onStatus('Uploading photo…')
+    let uploadError
+    try {
+      const result = await database().storage.from(postImageBucket).upload(imagePath, image, { upsert: false, contentType: image.type })
+      uploadError = result.error
+    } catch (problem) { uploadError = problem }
+    if (uploadError) {
+      // No post request was sent, so this attempt's unique upload can be removed.
+      const removed = await removeUnusedPostImage(imagePath)
+      throw new Error(`Photo upload failed: ${uploadError.message || 'Check your connection.'}${removed ? '' : ' If a file reached Storage, its cleanup could not be confirmed.'}`)
+    }
+  }
+  onStatus('Publishing post…')
+  let result
+  try {
+    result = await database().from('posts').insert({ body, user_id: userId, image_path: imagePath }).select(postFields).single()
+  } catch (error) { result = { error } }
+  if (!result.error && result.data) return result.data
+  const problem = result.error || new Error('The database did not return the saved post.')
+  if (imagePath) {
+    // A lost response may still mean the post saved. Recover it before cleanup.
+    try {
+      const saved = await database().from('posts').select(postFields).eq('user_id', userId).eq('image_path', imagePath).maybeSingle()
+      if (!saved.error && saved.data) return saved.data
+    } catch { /* Leave uncertain uploads intact to protect saved posts. */ }
+    if (definitelyRejected(problem)) {
+      const removed = await removeUnusedPostImage(imagePath)
+      throw new Error(`${feedError(problem)} ${removed ? 'The unused photo was removed.' : 'The unused photo could not be cleaned up; check Storage before retrying.'}`)
+    }
+  }
+  if (definitelyRejected(problem)) throw problem
+  const uncertain = new Error('The save result could not be confirmed. Refresh and check the feed before posting again. Any uploaded photo was kept to protect a possibly saved post.')
+  uncertain.uncertain = true
+  throw uncertain
 }
 
 export function getComments(postId) {
@@ -78,5 +123,15 @@ export async function getProfile(userId) {
   if (!userId) throw new Error('Please log in to view your profile.')
   const { data, error } = await database().from('profiles').select('id, display_name, bio, avatar_path, cover_path, created_at').eq('id', userId).maybeSingle()
   if (error) throw error
+  return data
+}
+
+export async function deletePost(postId, userId) {
+  if (!postId || !userId) throw new Error('Please log in before deleting a post.')
+  // RLS checks the real authenticated account; this filter is extra protection.
+  const { data, error } = await database().from('posts').delete()
+    .eq('id', postId).eq('user_id', userId).select('id, user_id, image_path').maybeSingle()
+  if (error) throw new Error(`Could not confirm deletion: ${feedError(error)} Refresh before retrying. The photo was not removed.`)
+  if (!data) throw new Error('This post is no longer available or you cannot delete it. Refresh the page to check.')
   return data
 }

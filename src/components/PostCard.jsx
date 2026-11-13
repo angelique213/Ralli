@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import Avatar from './Avatar.jsx'
+import PostDeleteControl from './PostDeleteControl.jsx'
+import { postImageUrl } from '../services/postImages.js'
 import { Link } from 'react-router'
 import { profilePath } from '../services/connections.js'
 import { getActivity, getComments, createComment, saveLike, feedError } from '../services/feed.js'
 
-function PostCard({ post, user, currentProfile }) {
+function PostCard({ post, user, currentProfile, onDeleted }) {
   // Profile edits immediately update this account's visible author details.
   const authorProfile = currentProfile?.id === post.user_id ? currentProfile : post.profiles
   const displayName = authorProfile?.display_name || 'Ralli Member'
@@ -18,6 +20,8 @@ function PostCard({ post, user, currentProfile }) {
   const [error, setError] = useState('')
   const [commentError, setCommentError] = useState('')
   const [retry, setRetry] = useState(0)
+  const [imageFailed, setImageFailed] = useState(false)
+  const [imageRetry, setImageRetry] = useState(0)
   const isLiked = activity?.isLiked || false
 
   // Gets saved counts and this account's like from the database.
@@ -86,8 +90,13 @@ function PostCard({ post, user, currentProfile }) {
           <h3><Link className="author-link" to={profilePath(post.user_id, user?.id)}>{displayName}</Link></h3>
           <p><time dateTime={post.created_at}>{timestamp}</time></p>
         </div>
+        {user?.id === post.user_id && onDeleted && <PostDeleteControl post={post} user={user} onDeleted={onDeleted} />}
       </header>
-      <p className="post-text">{post.body}</p>
+      {post.body && <p className="post-text">{post.body}</p>}
+      {post.image_path && <div className="post-photo">
+        {imageFailed ? <p role="alert">This post’s photo could not load. <button type="button" className="text-button" onClick={() => { setImageFailed(false); setImageRetry((value) => value + 1) }}>Retry photo</button></p>
+          : <img key={imageRetry} src={postImageUrl(post.image_path)} alt={`Photo shared by ${displayName}`} loading="lazy" onError={() => setImageFailed(true)} />}
+      </div>}
       {/* Keeps the saved counts separate from the action buttons. */}
       <div className="post-counts" aria-live="polite">
         <span>{activity ? `${activity.likeCount} ${activity.likeCount === 1 ? 'like' : 'likes'}` : 'Loading likes…'}</span>

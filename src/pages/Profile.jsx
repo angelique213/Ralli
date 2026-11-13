@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import PostCard from '../components/PostCard.jsx'
+import PostDeletionFeedback from '../components/PostDeletionFeedback.jsx'
+import { usePostDeletion } from '../components/usePostDeletion.js'
 import ConnectButton from '../components/ConnectButton.jsx'
 import ProfileConnections from '../components/ProfileConnections.jsx'
 import { getProfile, getUserPosts, feedError } from '../services/feed.js'
@@ -9,6 +11,7 @@ function Profile({ user, onNavigate, profileId = user.id }) {
   const isOwn = profileId === user.id
   const [profile, setProfile] = useState(null)
   const [posts, setPosts] = useState([])
+  const deletion = usePostDeletion(setPosts, user.id)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [retry, setRetry] = useState(0)
@@ -185,8 +188,9 @@ function Profile({ user, onNavigate, profileId = user.id }) {
           {aboutCard()}
           <section className="post-list" aria-labelledby="my-posts-title" hidden={tab !== 'posts'}>
             <h2 id="my-posts-title">{isOwn ? 'My Posts' : `${displayName}’s Posts`}</h2>
+            <PostDeletionFeedback {...deletion} />
             {posts.length === 0 ? <div className="profile-empty"><h3>{isOwn ? 'Your story starts here' : 'No posts yet'}</h3><p>{isOwn ? 'You have not shared a post yet.' : 'This member has not shared any posts yet.'}</p>{isOwn && <button type="button" className="primary-button" onClick={() => onNavigate('home')}>Go to feed</button>}</div>
-              : posts.map((post) => <PostCard key={post.id} post={post} user={user} currentProfile={profile} />)}
+              : posts.map((post) => <PostCard key={post.id} post={post} user={user} currentProfile={profile} onDeleted={deletion.onDeleted} />)}
           </section>
         </div>
       </>}

@@ -1069,3 +1069,34 @@ button:focus-visible, textarea:focus-visible {
 }
 .back-button:hover { background: #f3f0ff; border-color: #bcb0ee; }
 .back-button:focus-visible { outline: 3px solid #168bf2; outline-offset: 3px; }
+
+/* Post photos stay inside the existing feed and profile cards. */
+.post-photo-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+.post-photo-controls small { color: #62627a; font-size: 12px; }
+.post-photo-picker { position: relative; display: inline-flex; cursor: pointer; }
+.post-photo-picker:focus-within { outline: 3px solid #168bf2; outline-offset: 3px; }
+.post-photo-picker:has(input:disabled) { opacity: .6; cursor: not-allowed; }
+.post-photo-preview { margin: 16px 0 0; padding: 10px; border: 1px solid #e4e5f5; border-radius: 16px; background: #f7f8ff; }
+.post-photo-preview img { display: block; width: 100%; max-height: 280px; object-fit: contain; border-radius: 10px; }
+.post-photo-preview figcaption { margin-top: 8px; font-size: 12px; color: #62627a; overflow-wrap: anywhere; }
+.post-photo { margin: 18px 0; border: 1px solid #e4e5f5; border-radius: 16px; overflow: hidden; background: #f7f8ff; }
+.post-photo > img { display: block; width: 100%; height: auto; max-height: 600px; object-fit: contain; }
+.post-photo > p { margin: 16px; }
+
+/* Owner actions use a keyboard-friendly disclosure and confirmation dialog. */
+.post-delete-control { margin-left: auto; align-self: flex-start; flex-shrink: 0; }
+.post-options { position: relative; }
+.post-options summary { display: grid; place-items: center; width: 40px; height: 40px; list-style: none; border: 1px solid transparent; border-radius: 12px; color: #4935e8; font-size: 26px; line-height: 1; cursor: pointer; }
+.post-options summary::-webkit-details-marker { display: none; }
+.post-options summary:hover, .post-options[open] summary { background: #efedff; border-color: #ded9f3; }
+.post-options-popup { position: absolute; top: 44px; right: 0; z-index: 2; min-width: 150px; padding: 6px; border: 1px solid #ded9f3; border-radius: 12px; background: white; box-shadow: 0 8px 24px #24205f18; }
+.post-options-popup button { width: 100%; padding: 10px; border: 0; border-radius: 8px; background: white; color: #4935e8; text-align: left; cursor: pointer; }
+.post-options-popup button:hover { background: #f3f0ff; }
+.post-delete-dialog { width: min(440px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 24px; border: 1px solid #ded9f3; border-radius: 22px; color: #24205f; background: white; box-shadow: 0 16px 60px #24205f30; }
+.post-delete-dialog::backdrop { background: #24205f80; }
+.post-delete-dialog h2 { margin: 0 0 14px; font-size: 23px; }
+.post-delete-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.post-deletion-feedback { margin: 16px 0; }
+.post-deletion-notice { padding: 16px; margin-bottom: 12px; border: 1px solid #ded9f3; border-radius: 14px; background: #f3f0ff; overflow-wrap: anywhere; }
+.post-deletion-notice p { margin: 0 0 8px; }
+.post-options :is(summary, button):focus-visible, .post-delete-dialog button:focus-visible, .post-deletion-feedback:focus { outline: 3px solid #168bf2; outline-offset: 3px; }
