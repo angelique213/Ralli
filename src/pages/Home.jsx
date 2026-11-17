@@ -155,7 +155,7 @@ function Home({ user, onNavigate }) {
             {/* Displays each post using the same reusable card. */}
             {posts.map((post) => (
               <PostCard
-                onDeleted={deletion.onDeleted}
+                onUpdated={(saved) => setPosts((items) => items.map((item) => item.id === saved.id ? { ...item, body: saved.body } : item))} onDeleted={deletion.onDeleted}
                 user={user}
                 key={post.id}
                 post={post}

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import Avatar from './Avatar.jsx'
-import PostDeleteControl from './PostDeleteControl.jsx'
+import PostActions from './PostActions.jsx'
 import { postImageUrl } from '../services/postImages.js'
 import { Link } from 'react-router'
 import { profilePath } from '../services/connections.js'
 import { getActivity, getComments, createComment, saveLike, feedError } from '../services/feed.js'
 
-function PostCard({ post, user, currentProfile, onDeleted }) {
+function PostCard({ post, user, currentProfile, onDeleted, onUpdated }) {
   // Profile edits immediately update this account's visible author details.
   const authorProfile = currentProfile?.id === post.user_id ? currentProfile : post.profiles
   const displayName = authorProfile?.display_name || 'Ralli Member'
@@ -90,7 +90,7 @@ function PostCard({ post, user, currentProfile, onDeleted }) {
           <h3><Link className="author-link" to={profilePath(post.user_id, user?.id)}>{displayName}</Link></h3>
           <p><time dateTime={post.created_at}>{timestamp}</time></p>
         </div>
-        {user?.id === post.user_id && onDeleted && <PostDeleteControl post={post} user={user} onDeleted={onDeleted} />}
+        {user?.id === post.user_id && onDeleted && <PostActions post={post} user={user} onDeleted={onDeleted} onUpdated={onUpdated} />}
       </header>
       {post.body && <p className="post-text">{post.body}</p>}
       {post.image_path && <div className="post-photo">

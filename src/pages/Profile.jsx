@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router'
 import { useEffect, useRef, useState } from 'react'
 import PostCard from '../components/PostCard.jsx'
 import PostDeletionFeedback from '../components/PostDeletionFeedback.jsx'
@@ -8,6 +9,8 @@ import { getProfile, getUserPosts, feedError } from '../services/feed.js'
 import { profileImageUrl, saveProfile, uploadProfileImage } from '../services/profile.js'
 
 function Profile({ user, onNavigate, profileId = user.id }) {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const editorInput = useRef(null)
   const isOwn = profileId === user.id
   const [profile, setProfile] = useState(null)
   const [posts, setPosts] = useState([])
@@ -17,8 +20,8 @@ function Profile({ user, onNavigate, profileId = user.id }) {
   const [retry, setRetry] = useState(0)
   const [tab, setTab] = useState('posts')
   const [editing, setEditing] = useState(false)
-  const [name, setName] = useState('')
-  const [bio, setBio] = useState('')
+  const [name, setName] = useState(null)
+  const [bio, setBio] = useState(null)
   const [busy, setBusy] = useState('')
   const [saveError, setSaveError] = useState('')
   const [message, setMessage] = useState('')
@@ -68,6 +71,24 @@ function Profile({ user, onNavigate, profileId = user.id }) {
     setEditing(true)
   }
 
+  // A profile URL can open the existing form once saved data is available.
+  const editorOpen = isOwn && ready && (editing || searchParams.get('edit') === 'true')
+  const draftName = name ?? profile?.display_name ?? ''
+  const draftBio = bio ?? profile?.bio ?? ''
+
+  function closeEditor() {
+    setEditing(false)
+    setName(null)
+    setBio(null)
+    const next = new URLSearchParams(searchParams)
+    next.delete('edit')
+    setSearchParams(next, { replace: true })
+  }
+
+  useEffect(() => {
+    if (editorOpen) editorInput.current?.focus()
+  }, [editorOpen])
+
   async function handleSave(event) {
     event.preventDefault()
     if (!isOwn || busy) return
@@ -75,9 +96,9 @@ function Profile({ user, onNavigate, profileId = user.id }) {
     setSaveError('')
     setMessage('')
     try {
-      const saved = await saveProfile(user.id, name, bio)
+      const saved = await saveProfile(user.id, draftName, draftBio)
       setProfile(saved)
-      setEditing(false)
+      closeEditor()
       setMessage('Your profile was saved.')
     } catch (problem) {
       setSaveError(problem.message || 'Could not save your profile. Please try again.')
@@ -166,16 +187,16 @@ function Profile({ user, onNavigate, profileId = user.id }) {
             {saveError && <p className="field-error" role="alert">{saveError}</p>}
             {message && <div className="profile-success"><p role="status">{message}</p><button type="button" onClick={() => setMessage('')} aria-label="Dismiss success message">×</button></div>}
           </div>
-          {isOwn && editing && <form className="profile-editor" onSubmit={handleSave}>
+          {editorOpen && <form className="profile-editor" onSubmit={handleSave}>
             <h2>Edit Profile</h2>
             <label htmlFor="profile-name-input">Display name</label>
-            <input id="profile-name-input" required maxLength={100} value={name} disabled={Boolean(busy)} onChange={(event) => setName(event.target.value)} />
+            <input ref={editorInput} id="profile-name-input" required maxLength={100} value={draftName} disabled={Boolean(busy)} onChange={(event) => setName(event.target.value)} />
             <label htmlFor="profile-bio-input">Bio</label>
-            <textarea id="profile-bio-input" maxLength={300} rows={3} value={bio} disabled={Boolean(busy)} onChange={(event) => setBio(event.target.value)} />
-            <small>{bio.length}/300 characters</small>
+            <textarea id="profile-bio-input" maxLength={300} rows={3} value={draftBio} disabled={Boolean(busy)} onChange={(event) => setBio(event.target.value)} />
+            <small>{draftBio.length}/300 characters</small>
             <div className="profile-editor-actions">
               <button type="submit" className="primary-button" disabled={Boolean(busy)}>{busy === 'profile' ? 'Saving…' : 'Save changes'}</button>
-              <button type="button" className="post-action" disabled={Boolean(busy)} onClick={() => { setEditing(false); setSaveError('') }}>Cancel</button>
+              <button type="button" className="post-action" disabled={Boolean(busy)} onClick={() => { closeEditor(); setSaveError('') }}>Cancel</button>
             </div>
           </form>}
           <ProfileConnections profileId={profileId} user={user} />
@@ -190,7 +211,7 @@ function Profile({ user, onNavigate, profileId = user.id }) {
             <h2 id="my-posts-title">{isOwn ? 'My Posts' : `${displayName}’s Posts`}</h2>
             <PostDeletionFeedback {...deletion} />
             {posts.length === 0 ? <div className="profile-empty"><h3>{isOwn ? 'Your story starts here' : 'No posts yet'}</h3><p>{isOwn ? 'You have not shared a post yet.' : 'This member has not shared any posts yet.'}</p>{isOwn && <button type="button" className="primary-button" onClick={() => onNavigate('home')}>Go to feed</button>}</div>
-              : posts.map((post) => <PostCard key={post.id} post={post} user={user} currentProfile={profile} onDeleted={deletion.onDeleted} />)}
+              : posts.map((post) => <PostCard key={post.id} post={post} user={user} currentProfile={profile} onUpdated={(saved) => setPosts((items) => items.map((item) => item.id === saved.id ? { ...item, body: saved.body } : item))} onDeleted={deletion.onDeleted} />)}
           </section>
         </div>
       </>}

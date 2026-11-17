@@ -135,3 +135,15 @@ export async function deletePost(postId, userId) {
   if (!data) throw new Error('This post is no longer available or you cannot delete it. Refresh the page to check.')
   return data
 }
+
+export async function updatePost(postId, userId, body, hasImage = false) {
+  if (!postId || !userId) throw new Error('Please log in before editing a post.')
+  body = body.trim()
+  if ((!body && !hasImage) || body.length > 5000) throw new Error('Add text or keep the existing photo. Text must be 5000 characters or fewer.')
+  // Update only the caption. RLS checks ownership and the database checks content.
+  const { data, error } = await database().from('posts').update({ body })
+    .eq('id', postId).eq('user_id', userId).select('id, body').maybeSingle()
+  if (error) throw new Error(`Could not confirm the update: ${feedError(error)} Refresh before retrying.`)
+  if (!data) throw new Error('This post is no longer available or you cannot edit it. Refresh the page to check.')
+  return data
+}

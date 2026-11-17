@@ -15,6 +15,21 @@ do $$ declare a uuid; b uuid; image text; pid uuid; affected integer; begin
  insert into storage.objects(bucket_id,name) values('ralli-post-images',image);
  insert into public.posts(user_id,body,image_path) values(a,'',image) returning id into pid;
  if not exists(select 1 from public.posts where id=pid and body='' and image_path=image) then raise exception 'FAIL image-only post'; end if;
+ -- Caption edits must preserve the attachment and related activity.
+ insert into public.likes(post_id,user_id) values(pid,a);
+ insert into public.comments(post_id,user_id,body) values(pid,a,'Keep this comment');
+ update public.posts set body='Edited caption' where id=pid;
+ update public.posts set body='' where id=pid;
+ if not exists(select 1 from public.posts where id=pid and body='' and image_path=image)
+   or not exists(select 1 from public.likes where post_id=pid)
+   or not exists(select 1 from public.comments where post_id=pid) then
+   raise exception 'FAIL caption edit lost image or activity';
+ end if;
+ begin
+  update public.posts set body=repeat('x',5001) where id=pid;
+  raise exception 'FAIL oversized edit';
+ exception when check_violation then null; end;
+
  begin
   insert into public.posts(user_id,body) values(a,E' \t\n');
   raise exception 'FAIL empty post';

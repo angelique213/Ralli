@@ -454,34 +454,6 @@ button:focus-visible, textarea:focus-visible {
 
 }
 @media (max-width: 600px) {
-  .header-brand {
-    flex-direction: column;
-    gap: 4px;
-    padding-bottom: 16px;
-  }
-
-  .header-logo {
-    width: 96px;
-    height: 96px;
-  }
-
-  .main-nav {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
-  }
-
-  .nav-item {
-    min-width: 0;
-    padding: 8px 2px;
-    font-size: 12px;
-  }
-
-  .nav-note {
-    font-size: 10px;
-  }
-
   .home {
     padding-top: 28px;
   }
@@ -555,7 +527,6 @@ button:focus-visible, textarea:focus-visible {
 .auth-links { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-top: 24px; }
 .text-button { background: none; border: 0; padding: 6px 0; color: #4935e8; cursor: pointer; text-align: left; text-decoration: underline; }
 @media (max-width: 600px) {
-  .auth-navigation { margin-top: 12px; }
   .auth-card { padding: 22px; }
 }
 
@@ -1100,3 +1071,58 @@ button:focus-visible, textarea:focus-visible {
 .post-deletion-notice { padding: 16px; margin-bottom: 12px; border: 1px solid #ded9f3; border-radius: 14px; background: #f3f0ff; overflow-wrap: anywhere; }
 .post-deletion-notice p { margin: 0 0 8px; }
 .post-options :is(summary, button):focus-visible, .post-delete-dialog button:focus-visible, .post-deletion-feedback:focus { outline: 3px solid #168bf2; outline-offset: 3px; }
+
+/* Keep editing and long member content usable on narrow screens. */
+.post-edit-input { display: block; width: 100%; min-width: 0; margin: 10px 0; padding: 12px; border: 1px solid #d9d4ee; border-radius: 12px; font: inherit; color: inherit; resize: vertical; }
+.post-edit-input:focus-visible { outline: 3px solid #168bf2; outline-offset: 2px; }
+.post-edit-success { display: block; max-width: 100px; font-size: 12px; color: #386340; }
+.member-identity > :last-child, .profile-details, .challenge-page-heading > div { min-width: 0; overflow-wrap: anywhere; }
+.post-list, .home-feed { min-width: 0; }
+@media (max-width: 600px) {
+  .main-nav .nav-item, .post-options summary, .post-options-popup button, .post-action, .challenge-leave-button { min-height: 44px; }
+  .post-delete-dialog { padding: 20px; }
+  .post-counts, .comment-form { flex-wrap: wrap; }
+  .profile-details h1, .challenge-detail-header h1 { overflow-wrap: anywhere; }
+  .people-search input, .comment-form input, .profile-editor input, .profile-editor textarea, .challenge-form input, .challenge-form select, .challenge-form textarea, .post-edit-input { font-size: 16px; }
+  .challenge-tabs > button { flex: 1 1 auto; }
+}
+
+/* Mobile header: branding and account action above one compact navigation row. */
+@media (max-width: 768px) {
+  .header-brand {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "logo account" "navigation navigation";
+    align-items: center;
+    gap: 4px 12px;
+    padding: 6px 0 8px;
+  }
+  .header-logo { grid-area: logo; width: 52px; height: 52px; }
+  .header-brand .auth-navigation { grid-area: account; justify-content: flex-end; gap: 6px; margin: 0; }
+  .header-brand .auth-navigation button { min-height: 44px; padding: 8px 12px; font-size: 13px; border-radius: 12px; }
+  .main-nav {
+    grid-area: navigation;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    gap: 4px;
+  }
+  .main-nav .nav-item { min-width: 0; min-height: 44px; padding: 8px 2px; font-size: 12px; border-radius: 10px; }
+  .header-brand button:focus-visible { outline: 3px solid #168bf2; outline-offset: 2px; }
+}
+
+/* The mobile disclosure reuses the existing profile editor and sign-out action. */
+.mobile-account-menu { display: none; }
+@media (max-width: 768px) {
+  .header-brand .desktop-account-action { display: none; }
+  /* Own-profile editing is available in the mobile account menu. */
+  .profile-main-action:has(> button.primary-button) { display: none; }
+  .mobile-account-menu { display: block; position: relative; }
+  .mobile-account-menu summary { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #ded9f3; border-radius: 12px; color: #4935e8; background: #faf9ff; cursor: pointer; list-style: none; letter-spacing: 2px; }
+  .mobile-account-menu summary::-webkit-details-marker { display: none; }
+  .mobile-account-menu summary:hover, .mobile-account-menu[open] summary { background: #efedff; }
+  .account-dropdown { position: absolute; top: calc(100% + 6px); right: 0; z-index: 10; width: 176px; max-width: calc(100vw - 32px); padding: 6px; border: 1px solid #ded9f3; border-radius: 14px; background: white; box-shadow: 0 8px 24px #24205f20; }
+  .account-dropdown a, .header-brand .account-dropdown button { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 10px 12px; border: 0; border-radius: 8px; color: #4935e8; background: transparent; font: inherit; font-size: 14px; text-decoration: none; text-align: left; cursor: pointer; }
+  .account-dropdown a:hover, .account-dropdown button:hover { background: #f3f0ff; }
+  .mobile-account-menu :is(summary, a, button):focus-visible { outline: 3px solid #168bf2; outline-offset: 2px; }
+}
