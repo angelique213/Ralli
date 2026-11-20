@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router'
+import Messages from './pages/Messages.jsx'
 import Header from './components/Header.jsx'
 import Home from './pages/Home.jsx'
 import Profile from './pages/Profile.jsx'
@@ -18,7 +19,7 @@ function App() {
 
   // Existing buttons now change the URL instead of temporary page state.
   function navigateToPage(page) {
-    const paths = { home: '/', login: '/login', signup: '/signup', profile: '/profile', explore: '/explore', challenges: '/challenges' }
+    const paths = { home: '/', messages: '/messages', login: '/login', signup: '/signup', profile: '/profile', explore: '/explore', challenges: '/challenges' }
     navigate(paths[page])
   }
   const [session, setSession] = useState(null)
@@ -103,6 +104,10 @@ function App() {
             <Profile key={user.id} user={user} onNavigate={navigateToPage} />
           </>
         ) : <Navigate to="/login" replace />} />
+        <Route path="/messages/:userId?" element={user ? <>
+          <Header page="messages" onNavigate={navigateToPage} user={user} onLogout={handleLogout} loggingOut={loggingOut} />
+          <Messages key={user.id} user={user} />
+        </> : <Navigate to="/login" replace />} />
         <Route path="/explore" element={user ? <>
           <Header page="explore" onNavigate={navigateToPage} user={user} onLogout={handleLogout} loggingOut={loggingOut} />
           <Explore user={user} />

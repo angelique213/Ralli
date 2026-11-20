@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { useSearchParams } from 'react-router'
 import { useEffect, useRef, useState } from 'react'
 import PostCard from '../components/PostCard.jsx'
@@ -178,7 +179,7 @@ function Profile({ user, onNavigate, profileId = user.id }) {
               <p className="profile-post-count">{posts.length} {posts.length === 1 ? 'post' : 'posts'}</p>
               {profile?.bio && <p className="profile-bio">{profile.bio}</p>}
             </div>
-            <div className="profile-main-action">{isOwn ? <button type="button" className="primary-button" disabled={!ready || Boolean(busy)} onClick={startEdit}>Edit Profile</button> : <ConnectButton user={user} targetId={profileId} />}</div>
+            <div className="profile-main-action">{isOwn ? <button type="button" className="primary-button" disabled={!ready || Boolean(busy)} onClick={startEdit}>Edit Profile</button> : <><ConnectButton user={user} targetId={profileId} /><Link className="post-action" to={`/messages/${profileId}`}>Message</Link></>}</div>
           </div>
           <div className="profile-feedback">
             {isOwn && !ready && <p role="status">Profile editing needs the profile customization migration. Apply supabase/migrations/20261030_profile_customization.sql, then refresh this page.</p>}
