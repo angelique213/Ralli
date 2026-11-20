@@ -37,6 +37,7 @@ function Header({ page, onNavigate, user, onLogout, loggingOut }) {
             aria-current={page === 'profile' ? 'page' : undefined}
             onClick={() => onNavigate('profile')}
           >Profile</button>
+          <button type="button" className={`nav-item ${page === 'messages' ? 'nav-active' : ''}`} aria-current={page === 'messages' ? 'page' : undefined} onClick={() => onNavigate('messages')}>Messages</button>
         </nav>
         <div className="auth-navigation" aria-label="Account pages">
           {user ? <>
